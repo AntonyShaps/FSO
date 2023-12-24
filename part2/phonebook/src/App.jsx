@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const App = () => {
+const App = (props) => {
   const [persons, setPersons] = useState([
     { name: 'Arto Hellas', number: '040-123456', id: 1 },
     { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
@@ -34,18 +34,34 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      <form>
-        <div>
-          filter shown with <input value = {filterName} onChange={handleFilterName} />
-        </div>
-      </form>
+        <Filter filterName={filterName} handleFilterName={handleFilterName} />
       <h2>add a new</h2>
-      <form onSubmit={addName}>
+        <PeopleAdder addName={addName} newName={newName} handleNameChange={handleNameChange}
+      newNumber={newNumber} handleNumberChange={handleNumberChange}/>
+      <h2>Numbers</h2>
+        <Numbers persons={persons} filterName={filterName}/>
+    </div>
+  )
+}
+
+const Filter = (props) => {
+  return(
+    <form>
+    <div>
+      filter shown with <input value = {props.filterName} onChange={props.handleFilterName} />
+    </div>
+  </form>
+  )
+}
+
+const PeopleAdder = (props) => {
+  return(
+    <form onSubmit={props.addName}>
         <div>
-          name: <input value={newName} onChange={handleNameChange} />
+          name: <input value={props.newName} onChange={props.handleNameChange} />
         </div>
         <div>
-          number: <input value={newNumber} onChange={handleNumberChange}/>
+          number: <input value={props.newNumber} onChange={props.handleNumberChange}/>
         </div>
         <div>
           <button type="submit">
@@ -53,7 +69,13 @@ const App = () => {
           </button>
         </div>
       </form>
-      <h2>Numbers</h2>
+
+  )
+}
+
+const Numbers = ({ persons, filterName }) => {
+  return (
+    <div>
       {persons
         .filter(person => person.name.toLowerCase().includes(filterName.toLowerCase()))
         .map(person => (
@@ -61,7 +83,7 @@ const App = () => {
         ))
       }
     </div>
-  )
+  );
 }
 
 export default App
