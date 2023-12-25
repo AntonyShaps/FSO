@@ -43,6 +43,15 @@ const App = (props) => {
             setCompleteMessage(null)
           }, 5000)
         })
+        .catch(error => {
+          setCompleteMessage(`Information of ${nameExists.name} has already been removed from server`)
+          setTimeout(() => {
+            setCompleteMessage(null)
+          }, 5000)
+          setPersons(persons.filter(person=>person.name !==nameExists.name))
+          setNewName('')
+          setNewNumber('')
+        })
       }
     } else {
       personService
