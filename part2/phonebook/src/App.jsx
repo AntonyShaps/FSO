@@ -4,6 +4,7 @@ import personService from './services/persons'
 import Filter from './components/Filter'
 import Numbers from './components/Numbers'
 import PeopleAdder from './components/PeopleAdder'
+import Notification from './components/Notification'
 
 const App = (props) => {
   const [persons, setPersons] = useState([])
@@ -18,7 +19,7 @@ const App = (props) => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filterName, setNewFilterName] = useState('')
-
+  const [completeMessage, setCompleteMessage] = useState(null)
   const addName = (event) => {
     event.preventDefault()
     const nameObject = {
@@ -35,6 +36,12 @@ const App = (props) => {
           setPersons(persons.map(person => person.id !== nameExists.id ? person : returnedName))
           setNewName('')
           setNewNumber('')
+          setCompleteMessage(
+            `Updated ${nameExists.name}`
+          )
+          setTimeout(() => {
+            setCompleteMessage(null)
+          }, 5000)
         })
       }
     } else {
@@ -44,6 +51,12 @@ const App = (props) => {
         setPersons(persons.concat(returnedName))
         setNewName('')
         setNewNumber('')
+        setCompleteMessage(
+          `Added ${nameObject.name}`
+        )
+        setTimeout(() => {
+          setCompleteMessage(null)
+        }, 5000)
       })
     }
   }
@@ -63,6 +76,7 @@ const App = (props) => {
   return (
     <div>
       <h2>Phonebook</h2>
+        <Notification message={completeMessage} />
         <Filter filterName={filterName} handleFilterName={handleFilterName} />
       <h2>add a new</h2>
         <PeopleAdder addName={addName} newName={newName} handleNameChange={handleNameChange}
