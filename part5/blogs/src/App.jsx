@@ -4,55 +4,20 @@ import loginService from './services/login'
 import Blogs from './components/Blogs'
 import BlogAdder from './components/BlogAdder'
 import Notification from './components/Notification'
+import Togglable from './components/Togglable'
 import './App.css'
 
 
 const App = () => {
-
   const [blogs, setBlogs] = useState([])
-  const [newTitle, setNewTitle] = useState('')
-  const [newAuthor, setNewAuthor] = useState('')
-  const [newUrl, setNewUrl] = useState('')
-  const [newLikes, setNewLikes] = useState(0)
-  const [errorMessage, setErrorMessage] = useState(null)
-  const handleTitleChange = (event) => {setNewTitle(event.target.value)}
-  const handleAuthorChange = (event) => {setNewAuthor(event.target.value)}
-  const handleUrlChange = (event) => {setNewUrl(event.target.value)}
-  const handleLikesChange = (event) => {setNewLikes(event.target.value)}
   const [username, setUsername] = useState('') 
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null) 
-  const addBlog = event => {
-    event.preventDefault()
-    const blogObject = {
-      "title": newTitle,
-      "author": newAuthor,
-      "url": newUrl,
-      "likes": Number(newLikes)
-    }
-    blogService
-      .create(blogObject)
-      .then(returnedNote=> {
-        setBlogs(blogs.concat(returnedNote))
-        setNewTitle('')
-        setNewAuthor('')
-        setNewUrl('')
-        setNewLikes(0)
-        setErrorMessage(`a new blog ${returnedNote.title} by ${returnedNote.author} added`)
-        setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
-      })
-  }
+  const [errorMessage, setErrorMessage] = useState(null)
+  
+  
   useEffect(() => {
-    blogService
-      .getAll()
-      .then(initialNotes=> {
-        setBlogs(initialNotes)
-      })
-  },[])
-  useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem('loggedNoteappUser')
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
@@ -106,9 +71,30 @@ const App = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     blogService.setToken(null)
   }
+  const addBlog = (blogObject) => {
+    blogService
+      .create(blogObject)
+      .then(returnedNote=> {
+        setBlogs(blogs.concat(returnedNote))
+        setErrorMessage(`a new blog ${returnedNote.title} by ${returnedNote.author} added`)
+        setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+      })
+  }
+  useEffect(() => {
+    blogService
+      .getAll()
+      .then(initialNotes=> {
+        setBlogs(initialNotes)
+      })
+  },[])
 
-
-
+  const blogAdder = () => (
+    <Togglable buttonLabel="new blog">
+      <BlogAdder createBlog={addBlog} />
+    </Togglable>
+    )
 
   return (
     <div>
@@ -116,20 +102,13 @@ const App = () => {
       <Notification message={errorMessage} />
       {user === null && loginForm()}
       {user && <div>
-       <p>{user.name} logged in
+       <div>{user.name} logged in
         <button onClick={handleLogout}>
           logout
         </button>
-       </p>
-         
-         <BlogAdder
-          addBlog={addBlog}
-          newTitle={newTitle} handleTitleChange={handleTitleChange}
-          newAuthor={newAuthor} handleAuthorChange={handleAuthorChange}
-          newUrl={newUrl} handleUrlChange={handleUrlChange}
-          newLikes={newLikes} handleLikesChange={handleLikesChange}
-        />
-          <Blogs blogs = {blogs}/>
+        {blogAdder()}
+       </div>
+        <Blogs blogs={blogs}/>
       </div>
     }
       
