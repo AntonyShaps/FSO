@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PropTypes from 'prop-types'
 
 const Blogs = ({ blogs, addLikes, removeBlog }) => {
   const [visible, setVisible] = useState({})
@@ -59,6 +60,13 @@ const Blogs = ({ blogs, addLikes, removeBlog }) => {
       })}
     </div>
   )
+}
+
+
+Blogs.propTypes = {
+  blogs: PropTypes.array.isRequired,
+  addLikes: PropTypes.func.isRequired,
+  removeBlog: PropTypes.func.isRequired,
 }
 
 
