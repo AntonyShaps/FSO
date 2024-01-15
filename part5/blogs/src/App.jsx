@@ -85,10 +85,19 @@ const App = () => {
   useEffect(() => {
     blogService
       .getAll()
-      .then(initialNotes=> {
-        setBlogs(initialNotes)
+      .then(initialBlogs => {
+        const sortedBlogs = initialBlogs.sort((a, b) => b.likes - a.likes);
+        setBlogs(sortedBlogs);
       })
-  },[])
+  }, [])
+
+  const addLikes = async (id, blogObject) => {
+    await blogService.updateLikes(id, blogObject)
+  }
+
+  const removeBlog = async id => {
+    await blogService.deleteBlog(id)
+  }
 
   const blogAdder = () => (
     <Togglable buttonLabel="new blog">
@@ -108,7 +117,7 @@ const App = () => {
         </button>
         {blogAdder()}
        </div>
-        <Blogs blogs={blogs}/>
+        <Blogs blogs={blogs} addLikes={addLikes} removeBlog={removeBlog}/>
       </div>
     }
       
