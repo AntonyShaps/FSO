@@ -10,12 +10,12 @@ import './App.css'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
-  const [username, setUsername] = useState('') 
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null) 
+  const [user, setUser] = useState(null)
   const [errorMessage, setErrorMessage] = useState(null)
-  
-  
+
+
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
@@ -26,7 +26,7 @@ const App = () => {
   }, [])
   const handleLogin = async (event) => {
     event.preventDefault()
-    
+
     try {
       const user = await loginService.login({
         username, password,
@@ -47,7 +47,7 @@ const App = () => {
     <form onSubmit={handleLogin}>
       <div>
         username
-          <input
+        <input
           type="text"
           value={username}
           name="Username"
@@ -56,7 +56,7 @@ const App = () => {
       </div>
       <div>
         password
-          <input
+        <input
           type="password"
           value={password}
           name="Password"
@@ -64,7 +64,7 @@ const App = () => {
         />
       </div>
       <button type="submit">login</button>
-    </form>      
+    </form>
   )
   const handleLogout = () => {
     setUser(null)
@@ -74,20 +74,20 @@ const App = () => {
   const addBlog = (blogObject) => {
     blogService
       .create(blogObject)
-      .then(returnedNote=> {
+      .then(returnedNote => {
         setBlogs(blogs.concat(returnedNote))
         setErrorMessage(`a new blog ${returnedNote.title} by ${returnedNote.author} added`)
         setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
+          setErrorMessage(null)
+        }, 5000)
       })
   }
   useEffect(() => {
     blogService
       .getAll()
       .then(initialBlogs => {
-        const sortedBlogs = initialBlogs.sort((a, b) => b.likes - a.likes);
-        setBlogs(sortedBlogs);
+        const sortedBlogs = initialBlogs.sort((a, b) => b.likes - a.likes)
+        setBlogs(sortedBlogs)
       })
   }, [])
 
@@ -103,7 +103,7 @@ const App = () => {
     <Togglable buttonLabel="new blog">
       <BlogAdder createBlog={addBlog} />
     </Togglable>
-    )
+  )
 
   return (
     <div>
@@ -111,16 +111,16 @@ const App = () => {
       <Notification message={errorMessage} />
       {user === null && loginForm()}
       {user && <div>
-       <div>{user.name} logged in
-        <button onClick={handleLogout}>
+        <div>{user.name} logged in
+          <button onClick={handleLogout}>
           logout
-        </button>
-        {blogAdder()}
-       </div>
+          </button>
+          {blogAdder()}
+        </div>
         <Blogs blogs={blogs} addLikes={addLikes} removeBlog={removeBlog}/>
       </div>
-    }
-      
+      }
+
     </div>
   )
 }

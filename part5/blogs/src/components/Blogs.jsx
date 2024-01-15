@@ -32,8 +32,8 @@ const Blogs = ({ blogs, addLikes, removeBlog }) => {
     borderWidth: 1,
     marginBottom: 5
   }
-    return (
-      <div>
+  return (
+    <div>
       {blogs.map(blog => {
         const isVisible = visible[blog.id]
 
@@ -48,9 +48,9 @@ const Blogs = ({ blogs, addLikes, removeBlog }) => {
               <div>
                 <div>{blog.author}</div>
                 <div>{blog.url}</div>
-                <div>{blog.likes}<button onClick={()=>handleLikes(blog)}>like</button></div>
+                <div>{blog.likes}<button onClick={() => handleLikes(blog)}>like</button></div>
                 <div>{blog.name}</div>
-                <button onClick={()=>handleDelete(blog)}>remove</button>
+                <button onClick={() => handleDelete(blog)}>remove</button>
               </div>
             )}
             <p></p>

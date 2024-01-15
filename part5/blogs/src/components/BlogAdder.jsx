@@ -1,6 +1,6 @@
 import { useState } from 'react'
-const BlogAdder = ({createBlog}) => {
-  
+const BlogAdder = ({ createBlog }) => {
+
   const [newTitle, setNewTitle] = useState('')
   const [newAuthor, setNewAuthor] = useState('')
   const [newUrl, setNewUrl] = useState('')
@@ -14,43 +14,43 @@ const BlogAdder = ({createBlog}) => {
   const addBlog = event => {
     event.preventDefault()
     const name = JSON.parse(window.localStorage.getItem('loggedBlogappUser')).name
-    
+
     createBlog({
-      "title": newTitle,
-      "author": newAuthor,
-      "url": newUrl,
-      "likes": Number(newLikes),
-      "name" : name
+      'title': newTitle,
+      'author': newAuthor,
+      'url': newUrl,
+      'likes': Number(newLikes),
+      'name' : name
     })
-        setNewTitle('')
-        setNewAuthor('')
-        setNewUrl('')
-        setNewLikes(0)
+    setNewTitle('')
+    setNewAuthor('')
+    setNewUrl('')
+    setNewLikes(0)
   }
-  
-    return(
-      <form onSubmit={addBlog}>
-          <h3>create new blog</h3>
-          <div>
+
+  return(
+    <form onSubmit={addBlog}>
+      <h3>create new blog</h3>
+      <div>
             title: <input value={newTitle} onChange={handleTitleChange} />
-          </div>
-          <div>
+      </div>
+      <div>
             author: <input value={newAuthor} onChange={handleAuthorChange}/>
-          </div>
-          <div>
+      </div>
+      <div>
             url: <input value={newUrl} onChange={handleUrlChange}/>
-          </div>
-          <div>
+      </div>
+      <div>
             likes: <input value={newLikes} onChange={handleLikesChange}/>
-          </div>
-          <div>
-            <button type="submit">
+      </div>
+      <div>
+        <button type="submit">
               save
-            </button>
-          </div>
-        </form>
-  
-    )
-  }
+        </button>
+      </div>
+    </form>
+
+  )
+}
 
 export default BlogAdder
