@@ -93,10 +93,16 @@ const App = () => {
 
   const addLikes = async (id, blogObject) => {
     await blogService.updateLikes(id, blogObject)
+    const updatedBlogs = await blogService.getAll()
+    const sortedBlogs = updatedBlogs.sort((a, b) => b.likes - a.likes)
+    setBlogs(sortedBlogs)
   }
 
   const removeBlog = async id => {
     await blogService.deleteBlog(id)
+    const updatedBlogs = await blogService.getAll()
+    const sortedBlogs = updatedBlogs.sort((a, b) => b.likes - a.likes)
+    setBlogs(sortedBlogs)
   }
 
   const blogAdder = () => (

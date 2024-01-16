@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 
 const Blogs = ({ blogs, addLikes, removeBlog }) => {
   const [visible, setVisible] = useState({})
-
   const toggleVisibility = (id) => {
 
     setVisible({
@@ -22,9 +21,8 @@ const Blogs = ({ blogs, addLikes, removeBlog }) => {
     if(window.confirm(`Remove blog ${blog.title} by ${blog.author}`)){
       removeBlog(blog.id)
     }
-
   }
-
+  const name = JSON.parse(window.localStorage.getItem('loggedBlogappUser')).name
 
   const blogStyle = {
     paddingTop: 10,
@@ -37,21 +35,21 @@ const Blogs = ({ blogs, addLikes, removeBlog }) => {
     <div>
       {blogs.map(blog => {
         const isVisible = visible[blog.id]
-
+        const isCreator = name === blog.name
         return (
-          <div key={blog.id} style={blogStyle}>
-            {blog.title}
+          <div key={blog.id} style={blogStyle} className='blogg'>
+            {blog.title} {blog.author}
             <button onClick={() => toggleVisibility(blog.id)}>
               {isVisible ? 'hide' : 'show'}
             </button>
             <br />
             {isVisible && (
               <div>
-                <div>{blog.author}</div>
+                <div></div>
                 <div>{blog.url}</div>
                 <div>{blog.likes}<button onClick={() => handleLikes(blog)}>like</button></div>
                 <div>{blog.name}</div>
-                <button onClick={() => handleDelete(blog)}>remove</button>
+                {isCreator && <button onClick={() => handleDelete(blog)}>remove</button>}
               </div>
             )}
             <p></p>
