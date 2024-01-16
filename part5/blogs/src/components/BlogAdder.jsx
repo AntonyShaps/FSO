@@ -32,13 +32,13 @@ const BlogAdder = ({ createBlog }) => {
     <form onSubmit={addBlog}>
       <h3>create new blog</h3>
       <div>
-            title: <input value={newTitle} onChange={handleTitleChange} />
+            title: <input id='title' value={newTitle} onChange={handleTitleChange} />
       </div>
       <div>
-            author: <input value={newAuthor} onChange={handleAuthorChange}/>
+            author: <input id ='author' value={newAuthor} onChange={handleAuthorChange}/>
       </div>
       <div>
-            url: <input value={newUrl} onChange={handleUrlChange}/>
+            url: <input id='url' value={newUrl} onChange={handleUrlChange}/>
       </div>
       <div>
             likes: <input value={newLikes} onChange={handleLikesChange}/>
