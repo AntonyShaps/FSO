@@ -16,9 +16,98 @@ import {
   Link,
   useLocation,
   useNavigate,
-  Navigate
+  Navigate,
+  useParams
 } from 'react-router-dom'
 import queryString from 'query-string'
+
+const Blogsview = ({ blogs, user, handleLogout }) => {
+  const navigate = useNavigate()
+  const id = useParams().id
+  const blog = blogs.find((b) => b.id === id)
+  const name = JSON.parse(
+    window.localStorage.getItem('loggedBlogappUser')
+  )?.name
+  const isCreator = name === blog.user?.name
+  const queryClient = useQueryClient()
+
+  const mutationAddLikes = useMutation({
+    mutationFn: ({ id, updatedBlog }) =>
+      blogService.updateLikes(id, updatedBlog),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['blogs'])
+    }
+  })
+
+  const mutationRemoveBlog = useMutation({
+    mutationFn: (id) => blogService.deleteBlog(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['blogs']), navigate('/')
+    }
+  })
+  const handleLikes = (blog) => {
+    const updatedBlog = { ...blog, likes: blog.likes + 1 }
+    mutationAddLikes.mutate({ id: blog.id, updatedBlog })
+  }
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to remove this blog?')) {
+      mutationRemoveBlog.mutate(id)
+    }
+  }
+  const [comment, setComment] = useState('')
+
+  const mutationAddComment = useMutation({
+    mutationFn: (newComment) => blogService.addComment(blog.id, newComment),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['blogs'])
+      setComment('')
+    }
+  })
+
+  const submitComment = (event) => {
+    event.preventDefault()
+    mutationAddComment.mutate(comment)
+  }
+  return (
+    <div>
+      <Menu user={user} handleLogout={handleLogout} />
+      <h2>
+        {blog.title} {blog.author}
+      </h2>
+      <br />
+      {blog.url}
+      <br />
+      <div>
+        Likes: {blog.likes}
+        <button onClick={() => handleLikes(blog)}>Like</button>
+      </div>
+      <div>Posted by {blog.user?.name}</div>
+      {isCreator && (
+        <button onClick={() => handleDelete(blog.id)}>Remove</button>
+      )}
+      <div>
+        <div>
+          <h3>Comments</h3>
+          <form onSubmit={submitComment}>
+            <input
+              type="text"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Add a comment..."
+            />
+            <button type="submit">Post Comment</button>
+          </form>
+          <ul>
+            {blog.comments.map((comment, index) => (
+              <li key={index}>{comment}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
 const Users = ({ user, handleLogout }) => {
   const {
     data: users,
@@ -251,6 +340,12 @@ const App = () => {
         <Link to="/"></Link>
       </div>
       <Routes>
+        <Route
+          path="/blogs/:id"
+          element={
+            <Blogsview blogs={blogs} user={user} handleLogout={handleLogout} />
+          }
+        />
         <Route path="/userblogs" element={<Userblogs />} />
         <Route
           path="/"
