@@ -40,3 +40,14 @@
 .read-the-docs {
   color: #888;
 }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
