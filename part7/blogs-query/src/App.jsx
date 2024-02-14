@@ -7,6 +7,7 @@ import BlogAdder from './components/BlogAdder'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
 import './App.css'
+import { Table } from 'react-bootstrap'
 import { useNotificationDispatch } from './NotificationContext'
 import userService from './services/users'
 import {
@@ -126,7 +127,7 @@ const Users = ({ user, handleLogout }) => {
     <div>
       <Menu user={user} handleLogout={handleLogout} />
       <h3>Users</h3>
-      <table>
+      <Table striped>
         <thead>
           <tr>
             <th>User</th>
@@ -147,7 +148,7 @@ const Users = ({ user, handleLogout }) => {
             </tr>
           ))}
         </tbody>
-      </table>
+      </Table>
     </div>
   )
 }
