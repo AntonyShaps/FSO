@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Blogs from './components/Blogs'
@@ -6,126 +7,126 @@ import BlogAdder from './components/BlogAdder'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
 import './App.css'
+import { useNotificationDispatch } from './NotificationContext'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
+  const queryClient = useQueryClient()
+  const dispatch = useNotificationDispatch()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [user, setUser] = useState(
+    JSON.parse(window.localStorage.getItem('loggedBlogappUser'))
+  )
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON)
-      setUser(user)
+    if (user) {
       blogService.setToken(user.token)
     }
-  }, [])
-  const handleLogin = async (event) => {
-    event.preventDefault()
+  }, [user])
 
-    try {
-      const user = await loginService.login({
-        username,
-        password
-      })
+  const {
+    isLoading,
+    isError,
+    error,
+    data: blogs
+  } = useQuery({
+    queryKey: ['blogs'],
+    queryFn: blogService.getAll
+  })
+
+  const loginMutation = useMutation({
+    mutationFn: loginService.login,
+    onSuccess: (user) => {
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
       blogService.setToken(user.token)
       setUser(user)
-      setUsername('')
-      setPassword('')
-    } catch (exception) {
-      setErrorMessage('wrong username or password')
+      dispatch({ type: 'showNotification', payload: 'Logged in successfully' })
       setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
+        dispatch({ type: 'hideNotification' })
+      }, 1000)
+    },
+    onError: (error) => {
+      dispatch({
+        type: 'showNotification',
+        payload: 'Wrong username or password'
+      })
+      setTimeout(() => {
+        dispatch({ type: 'hideNotification' })
+      }, 1000)
     }
+  })
+
+  const addBlogMutation = useMutation({
+    mutationFn: blogService.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] })
+      dispatch({ type: 'showNotification', payload: 'Blog added successfully' })
+      setTimeout(() => {
+        dispatch({ type: 'hideNotification' })
+      }, 1000)
+    },
+    onError: (error) => {
+      dispatch({
+        type: 'showNotification',
+        payload: `Failed to add blog: ${error.message}`
+      })
+      setTimeout(() => {
+        dispatch({ type: 'hideNotification' })
+      }, 1000)
+    }
+  })
+
+  const handleLogin = (event) => {
+    event.preventDefault()
+    loginMutation.mutate({ username, password })
   }
-  const loginForm = () => (
-    <form onSubmit={handleLogin}>
-      <div>
-        username
-        <input
-          id="username"
-          type="text"
-          value={username}
-          name="Username"
-          onChange={({ target }) => setUsername(target.value)}
-        />
-      </div>
-      <div>
-        password
-        <input
-          id="password"
-          type="password"
-          value={password}
-          name="Password"
-          onChange={({ target }) => setPassword(target.value)}
-        />
-      </div>
-      <button id="login-button" type="submit">
-        login
-      </button>
-    </form>
-  )
+
   const handleLogout = () => {
     setUser(null)
     window.localStorage.removeItem('loggedBlogappUser')
     blogService.setToken(null)
   }
-  const addBlog = (blogObject) => {
-    blogService.create(blogObject).then((returnedNote) => {
-      setBlogs(blogs.concat(returnedNote))
-      setErrorMessage(
-        `a new blog ${returnedNote.title} by ${returnedNote.author} added`
-      )
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
-    })
-  }
-  useEffect(() => {
-    blogService.getAll().then((initialBlogs) => {
-      const sortedBlogs = initialBlogs.sort((a, b) => b.likes - a.likes)
-      setBlogs(sortedBlogs)
-    })
-  }, [])
 
-  const addLikes = async (id, blogObject) => {
-    await blogService.updateLikes(id, blogObject)
-    const updatedBlogs = await blogService.getAll()
-    const sortedBlogs = updatedBlogs.sort((a, b) => b.likes - a.likes)
-    setBlogs(sortedBlogs)
-  }
-
-  const removeBlog = async (id) => {
-    await blogService.deleteBlog(id)
-    const updatedBlogs = await blogService.getAll()
-    const sortedBlogs = updatedBlogs.sort((a, b) => b.likes - a.likes)
-    setBlogs(sortedBlogs)
-  }
-
-  const blogAdder = () => (
-    <Togglable buttonLabel="new blog">
-      <BlogAdder createBlog={addBlog} />
-    </Togglable>
-  )
+  if (isLoading) return <div>Loading...</div>
+  if (isError) return <div>Error: {error.message}</div>
 
   return (
     <div>
       <h1>Blogs</h1>
-      <Notification message={errorMessage} />
-      {user === null && loginForm()}
-      {user && (
+      <Notification />
+      {user ? (
         <div>
-          <div>
-            {user.name} logged in
-            <button onClick={handleLogout}>logout</button>
-            {blogAdder()}
-          </div>
-          <Blogs blogs={blogs} addLikes={addLikes} removeBlog={removeBlog} />
+          <p>{user.name} logged in</p>
+          <button onClick={handleLogout}>logout</button>
+          <Togglable buttonLabel="new blog">
+            <BlogAdder
+              createBlog={(blogObject) => addBlogMutation.mutate(blogObject)}
+            />
+          </Togglable>
+          <Blogs blogs={blogs || []} />
         </div>
+      ) : (
+        <form onSubmit={handleLogin}>
+          <div>
+            username
+            <input
+              type="text"
+              value={username}
+              onChange={({ target }) => setUsername(target.value)}
+              name="Username"
+            />
+          </div>
+          <div>
+            password
+            <input
+              type="password"
+              value={password}
+              onChange={({ target }) => setPassword(target.value)}
+              name="Password"
+            />
+          </div>
+          <button type="submit">login</button>
+        </form>
       )}
     </div>
   )

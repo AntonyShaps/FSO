@@ -1,27 +1,45 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import blogService from '../services/blogs'
 
-const Blogs = ({ blogs, addLikes, removeBlog }) => {
+const Blogs = ({ blogs }) => {
   const [visible, setVisible] = useState({})
+  const queryClient = useQueryClient()
+
+  const mutationAddLikes = useMutation({
+    mutationFn: ({ id, updatedBlog }) =>
+      blogService.updateLikes(id, updatedBlog),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['blogs'])
+    }
+  })
+
+  const mutationRemoveBlog = useMutation({
+    mutationFn: (id) => blogService.deleteBlog(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['blogs'])
+    }
+  })
+
   const toggleVisibility = (id) => {
-    setVisible({
-      ...visible,
-      [id]: !visible[id]
-    })
+    setVisible((prev) => ({ ...prev, [id]: !prev[id] }))
   }
+
   const handleLikes = (blog) => {
-    const updatedBlog = {
-      ...blog,
-      likes: blog.likes + 1
-    }
-    addLikes(blog.id, updatedBlog)
+    const updatedBlog = { ...blog, likes: blog.likes + 1 }
+    mutationAddLikes.mutate({ id: blog.id, updatedBlog })
   }
-  const handleDelete = (blog) => {
-    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      removeBlog(blog.id)
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to remove this blog?')) {
+      mutationRemoveBlog.mutate(id)
     }
   }
-  const name = JSON.parse(window.localStorage.getItem('loggedBlogappUser')).name
+
+  const name = JSON.parse(
+    window.localStorage.getItem('loggedBlogappUser')
+  )?.name
 
   const blogStyle = {
     paddingTop: 10,
@@ -30,35 +48,33 @@ const Blogs = ({ blogs, addLikes, removeBlog }) => {
     borderWidth: 1,
     marginBottom: 5
   }
+
   return (
     <div>
       {blogs.map((blog) => {
         const isVisible = visible[blog.id]
-        const isCreator = name === blog.name
+        const isCreator = name === blog.user?.name
         return (
-          <div key={blog.id} style={blogStyle} className="blogg">
-            {blog.title} {blog.author}
+          <div key={blog.id} style={blogStyle} className="blog">
+            <div>
+              {blog.title} {blog.author}
+            </div>
             <button onClick={() => toggleVisibility(blog.id)}>
-              {isVisible ? 'hide' : 'show'}
+              {isVisible ? 'Hide' : 'Show'}
             </button>
-            <br />
             {isVisible && (
               <div>
-                <div></div>
-                <div>{blog.url}</div>
+                <div>URL: {blog.url}</div>
                 <div>
-                  {blog.likes}
-                  <button id="like-button" onClick={() => handleLikes(blog)}>
-                    like
-                  </button>
+                  Likes: {blog.likes}
+                  <button onClick={() => handleLikes(blog)}>Like</button>
                 </div>
-                <div>{blog.name}</div>
+                <div>Posted by {blog.user?.name}</div>
                 {isCreator && (
-                  <button onClick={() => handleDelete(blog)}>remove</button>
+                  <button onClick={() => handleDelete(blog.id)}>Remove</button>
                 )}
               </div>
             )}
-            <p></p>
           </div>
         )
       })}
@@ -67,9 +83,7 @@ const Blogs = ({ blogs, addLikes, removeBlog }) => {
 }
 
 Blogs.propTypes = {
-  blogs: PropTypes.array.isRequired,
-  addLikes: PropTypes.func.isRequired,
-  removeBlog: PropTypes.func.isRequired
+  blogs: PropTypes.array.isRequired
 }
 
 export default Blogs
