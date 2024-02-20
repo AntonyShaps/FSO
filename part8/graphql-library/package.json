@@ -4,13 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "NODE_ENV=production node index.js",
+    "populateauthors": "NODE_ENV=production node dbauthors.js",
+    "populatebooks": "NODE_ENV=production node dbbooks.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Anton",
   "license": "MIT",
   "dependencies": {
     "@apollo/server": "^4.10.0",
+    "dotenv": "^16.4.5",
     "graphql": "^16.8.1",
+    "mongoose": "^8.1.3",
+    "mongoose-unique-validator": "^5.0.0",
     "uuid": "^9.0.1"
   }
 }
