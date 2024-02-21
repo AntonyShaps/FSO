@@ -2,7 +2,7 @@ import { gql, useQuery, useMutation } from '@apollo/client'
 import { useState } from 'react'
 import Select from 'react-select'
 
-const ALL_AUTHORS = gql`
+export const ALL_AUTHORS = gql`
 query{
   allAuthors{
     name
@@ -11,8 +11,8 @@ query{
   }
 }`
 const EDIT_AUTHOR = gql`
-  mutation editAuthor($name: String!, $born: String!){
-    editAuthor(name: $name, setBornTo: $born){
+  mutation editAuthor($name: String!, $setBornTo: Int!){
+    editAuthor(name: $name, setBornTo: $setBornTo){
        name
        born
        bookCount
@@ -21,17 +21,23 @@ const EDIT_AUTHOR = gql`
   }
 `
 
+
 const Authors = (props) => {
   const [name, setName] = useState(null)
   const [born, setBorn] = useState('')
   const [ changeAuthor ] = useMutation(EDIT_AUTHOR, {
     refetchQueries: [ { query: ALL_AUTHORS } ]
   })
+  console.log({ name: name, setBornTo: parseInt(born, 10) })
   const submit = async (event) => {
     event.preventDefault()
-    changeAuthor({variables:{name:name.value,born:born}})
+    await changeAuthor({
+      variables: {
+        name: name.value,
+        setBornTo: parseInt(born, 10)
+      }
+    })
     console.log('edit author...')
-
     setName(null)
     setBorn(0)
   }

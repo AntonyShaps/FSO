@@ -21,7 +21,7 @@ mongoose.connect(MONGODB_URI)
     console.log('error connection to MongoDB:', error.message)
   })
 
-const typeDefs = `
+  const typeDefs = `
   type User {
     username: String!
     favoriteGenre: String!
@@ -33,12 +33,12 @@ const typeDefs = `
   type Author {
     name: String!
     id: ID!
-    born: Int
+    born: String
     bookCount: Int
   }
   type Book {
     title: String!
-    published: Int!
+    published: String!
     author: Author!
     id: ID!
     genres: [String!]!
@@ -52,24 +52,23 @@ const typeDefs = `
   }
   type Mutation {
     addBook(
-        title: String!
-        published: Int!
-        author: String!
-        id: ID
-        genres: [String!]!
+      title: String!
+      author: String!
+      published:String!
+      genres: [String!]!
     ): Book
     editAuthor(
-        name: String!
-        setBornTo: Int!
+      name: String!
+      born: Int!
     ): Author
     createUser(
       username: String!
       favoriteGenre: String!
-    ):User
+    ): User
     login(
-      username:String!
-      password:String!
-    ):Token
+      username: String!
+      password: String!
+    ): Token
   }
 `
 
@@ -83,17 +82,17 @@ const resolvers = {
         if (!author) {
           return []
         }
-        return await Book.find({ author: author._id })
+        return await Book.find({ author: author._id }).populate('author')
       } else if (args.genres) {
-        return await Book.find({ genres: { $in: args.genres } })
+        return await Book.find({ genres: { $in: args.genres } }).populate('author')
       } else {
-        return await Book.find({})
+        return await Book.find({}).populate('author')
       }
     },
-    allAuthors:async () => await Author.find({})
-    },
+    allAuthors:async () => await Author.find({}),
     me: async (root, args, context) => {
       return context.currentUser
+    },
   },
   Author: {
     bookCount: async(root) =>{
@@ -105,75 +104,55 @@ const resolvers = {
   Mutation: {
     addBook: async (root, args, context) => {
 
-      const existAuthor = await Author.findOne({ name: args.author })
-      const currentUser = context.currentUser
-
-      if(!currentUser){
-       throw new GraphQLError('not authenticated', {
-         extensions: {
-           code: 'BAD_USER_INPUT',
-         }
-       })
+      if (!context.currentUser) {
+        throw new GraphQLError('Not authenticated')
       }
+    
+      let author = await Author.findOne({ name: args.author })
+    
 
-      if(!existAuthor){
-         const newAuthor = new Author({ name: args.author, })
-         try{
-           await newAuthor.save()
-         } catch (error) {
-           throw new GraphQLError('saving author failed', {
-             extensions: {
-               code: 'BAD_USER_INPUT',
-               invalidArgs: args,
-               error
-             }
-           })
-         }
+      if (!author) {
+        author = new Author({ name: args.author })
+        try {
+          await author.save()
+        } catch (error) {
+          console.error("Error saving new author:", error)
+          throw new GraphQLError(`Error saving author: ${error.message}`)
+        }
       }
-       const foundAuthor = await Author.findOne({ name: args.author })
-       const book = new Book({ 
-         ...args, 
-         author: foundAuthor,
-        })
-       try{
-         await book.save()
-         return book
-       } catch (error) {
-         throw new GraphQLError('saving book failed', {
-           extensions: {
-             code: 'BAD_USER_INPUT',
-             invalidArgs: args,
-             error
-           }
-         })
-     } 
-   },
+    
+
+      const book = new Book({ ...args, author: author._id })
+      try {
+        await book.save()
+        return book
+      } catch (error) {
+        console.error("Error saving book:", error);
+        throw new GraphQLError(`Error saving book: ${error.message}`)
+      }
+    },
+    
     editAuthor: async (root, args, context) => {
       const author = await Author.findOne({ name: args.name })
-      const currentUser = context.currentUser
-       if(!currentUser){
-        throw new GraphQLError('not authenticated', {
-          extensions: {
-            code: 'BAD_USER_INPUT',
-          }
-        })
-       }
-      if(!author){
-        return null
-      }else{
-      author.born = args.born
-      try{
-         await author.save()
-      } catch (error) {
-        throw new GraphQLError('saving born failed',{
-          extensions: {
-            code: 'BAD_USER_INPUT',
-            invalidArgs: args.name,
-            error
-          }
-        })
+      if (!context.currentUser) {
+        throw new GraphQLError('not authenticated')
       }
-      return author
+      if (!author) {
+        return null
+      } else {
+        author.born = args.setBornTo
+        try {
+          await author.save()
+        } catch (error) {
+          throw new GraphQLError('saving born failed', {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              invalidArgs: args.name,
+              error
+            }
+          })
+        }
+        return author
       }
     },
     createUser: async (root, args) => {
@@ -196,7 +175,7 @@ const resolvers = {
     login: async (root, args) => {
       const user = await User.findOne({ username: args.username })
 
-      if( !user || args.password != 'numberone' ){
+      if( !user || args.password != 'root' ){
         throw new GraphQLError('wrong credentials', {
           extensions: {
             code: 'BAD_USER_INPUT'
